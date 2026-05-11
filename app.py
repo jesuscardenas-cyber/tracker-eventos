@@ -18,6 +18,7 @@ from database import (
     obtener_historial,
     obtener_usuario,
     login,
+    crear_usuario,
 )
 import streamlit as st
 import pandas as pd
@@ -35,8 +36,8 @@ if "auth" not in st.session_state:
 if not st.session_state.auth:
     st.title("🔐 Login")
 
-    username = st.text_input("Usuario")
-    password = st.text_input("Contraseña", type="password")
+    username = st.text_input("Usuario").strip()
+    password = st.text_input("Contraseña", type="password").strip()
 
     if st.button("Ingresar"):
         user = login(username, password)
@@ -518,6 +519,12 @@ with tabs[5]:
             jefe_id = next(m["id"] for m in equipo if m["nombre"] == jefe_nombre)
 
         st.subheader("Agregar miembro")
+        st.subheader("Crear acceso")
+
+        new_user = st.text_input("Usuario")
+        new_pass = st.text_input("Contraseña", type="password")
+
+        rol = st.selectbox("Rol", ["Admin", "Jefe", "Coordinador", "Auxiliar"])
 
         nombre = st.text_input("Nombre", key="adm_nom")
 
@@ -537,6 +544,7 @@ with tabs[5]:
 
         if st.button("Agregar miembro", key="btn_add_user"):
             insertar_miembro(nombre, puesto, area, jefe_id)
+            crear_usuario(new_user, new_pass, nombre, puesto)
             st.success("Miembro agregado")
             st.rerun()
 

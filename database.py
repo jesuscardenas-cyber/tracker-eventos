@@ -131,13 +131,28 @@ def init_db():
     """)
     c.execute("""
     CREATE TABLE IF NOT EXISTS usuarios (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE,
-    password TEXT,
-    nombre TEXT,
-    rol TEXT
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE,
+        password TEXT,
+        nombre TEXT,
+        rol TEXT
     )
     """)
+
+    # ADMIN DEFAULT
+    c.execute(
+        """
+        INSERT OR IGNORE INTO usuarios
+        (username, password, nombre, rol)
+        VALUES (?, ?, ?, ?)
+        """,
+        (
+            "jesus.cardenas",
+            "40115",
+            "Jesus Cardenas",
+            "Admin",
+        ),
+    )
     # Insertar valores por defecto
     c.execute("INSERT OR IGNORE INTO areas_equipo (nombre) VALUES ('Diseño')")
     c.execute("INSERT OR IGNORE INTO areas_equipo (nombre) VALUES ('Eventos')")
@@ -161,14 +176,6 @@ def init_db():
         c.execute("ALTER TABLE tareas ADD COLUMN asignado_por TEXT")
     except Exception:
         pass
-    c.execute(
-        """
-    INSERT OR IGNORE INTO usuarios
-    (username, password, nombre, rol)
-    VALUES (?, ?, ?, ?)
-    """,
-        ("jesus.cardenas", "40115", "Jesus Cardenas", "Admin"),
-    )
     conn.commit()
     conn.close()
 
@@ -613,6 +620,22 @@ def obtener_usuario(nombre):
     if row:
         return {"id": row[0], "nombre": row[1], "puesto": row[2], "jefe_id": row[3]}
     return None
+
+
+def crear_usuario(username, password, nombre, rol):
+    conn = get_conn()
+    c = conn.cursor()
+
+    c.execute(
+        """
+    INSERT INTO usuarios (username, password, nombre, rol)
+    VALUES (?, ?, ?, ?)
+    """,
+        (username, password, nombre, rol),
+    )
+
+    conn.commit()
+    conn.close()
 
 
 def login(username, password):
