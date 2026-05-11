@@ -637,6 +637,25 @@ def obtener_usuario(nombre):
     return None
 
 
+# ------------------ USUARIOS ------------------
+
+
+def crear_usuario(username, password, nombre, rol):
+    conn = get_conn()
+    c = conn.cursor()
+
+    c.execute(
+        """
+        INSERT INTO usuarios (username, password, nombre, rol)
+        VALUES (?, ?, ?, ?)
+        """,
+        (username, password, nombre, rol),
+    )
+
+    conn.commit()
+    conn.close()
+
+
 def obtener_usuarios(username):
     conn = get_conn()
     c = conn.cursor()
