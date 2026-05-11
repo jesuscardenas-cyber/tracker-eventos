@@ -1,0 +1,8 @@
+config.toml
+[server]
+headless = true
+port = 8501
+
+[theme]
+base="dark"
+primaryColor="#ff4b4b"
