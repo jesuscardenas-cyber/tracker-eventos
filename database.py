@@ -608,35 +608,6 @@ def obtener_miembro(nombre):
     return None
 
 
-def obtener_usuario(nombre):
-    conn = get_conn()
-    c = conn.cursor()
-
-    c.execute(
-        """
-        SELECT id, nombre, puesto, area, jefe_id
-        FROM equipo
-        WHERE nombre = ?
-        """,
-        (nombre,),
-    )
-
-    row = c.fetchone()
-
-    conn.close()
-
-    if row:
-        return {
-            "id": row[0],
-            "nombre": row[1],
-            "puesto": row[2],
-            "area": row[3],
-            "jefe_id": row[4],
-        }
-
-    return None
-
-
 # ------------------ USUARIOS ------------------
 
 
@@ -656,7 +627,35 @@ def crear_usuario(username, password, nombre, rol):
     conn.close()
 
 
-def obtener_usuarios(username):
+def obtener_usuario(username):
+    conn = get_conn()
+    c = conn.cursor()
+
+    c.execute(
+        """
+        SELECT id, username, nombre, rol
+        FROM usuarios
+        WHERE username = ?
+        """,
+        (username,),
+    )
+
+    row = c.fetchone()
+
+    conn.close()
+
+    if row:
+        return {
+            "id": row[0],
+            "username": row[1],
+            "nombre": row[2],
+            "rol": row[3],
+        }
+
+    return None
+
+
+def obtener_usuarios():
     conn = get_conn()
     c = conn.cursor()
 
