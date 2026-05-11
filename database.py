@@ -435,6 +435,8 @@ def generar_nivel(area, puesto):
         pref = "E"
     elif area.lower() == "diseño":
         pref = "D"
+    elif area.lower() == "global":
+        pref = "G"
     else:
         pref = "X"
 
@@ -606,33 +608,46 @@ def obtener_miembro(nombre):
     return None
 
 
-def obtener_usuario(nombre):
-    conn = sqlite3.connect("data.db")
-    c = conn.cursor()
-
-    c.execute(
-        "SELECT id, nombre, puesto, jefe_id FROM equipo WHERE nombre = ?", (nombre,)
-    )
-    row = c.fetchone()
-
-    conn.close()
-
-    if row:
-        return {"id": row[0], "nombre": row[1], "puesto": row[2], "jefe_id": row[3]}
-    return None
-
-
 def crear_usuario(username, password, nombre, rol):
     conn = get_conn()
     c = conn.cursor()
 
     c.execute(
         """
-    INSERT INTO usuarios (username, password, nombre, rol)
-    VALUES (?, ?, ?, ?)
-    """,
+        INSERT INTO usuarios (username, password, nombre, rol)
+        VALUES (?, ?, ?, ?)
+        """,
         (username, password, nombre, rol),
     )
+
+    conn.commit()
+    conn.close()
+
+
+def obtener_usuarios():
+    conn = get_conn()
+    c = conn.cursor()
+
+    c.execute(
+        """
+        SELECT id, username, nombre, rol
+        FROM usuarios
+        """
+    )
+
+    rows = c.fetchall()
+
+    conn.close()
+
+    return [
+        {
+            "id": r[0],
+            "username": r[1],
+            "nombre": r[2],
+            "rol": r[3],
+        }
+        for r in rows
+    ]
 
     conn.commit()
     conn.close()

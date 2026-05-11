@@ -19,6 +19,7 @@ from database import (
     obtener_usuario,
     login,
     crear_usuario,
+    obtener_usuarios,
 )
 import streamlit as st
 import pandas as pd
@@ -502,7 +503,9 @@ with tabs[4]:
 with tabs[5]:
     st.header("⚙️ Administración")
 
-    sub1, sub2, sub3 = st.tabs(["👤 Equipo", "🏢 Áreas solicitantes", "📚 Catálogo"])
+    sub1, sub2, sub3, sub4 = st.tabs(
+        ["👤 Equipo", "🏢 Áreas solicitantes", "📚 Catálogo", "🔐 Accesos"]
+    )
 
     # ================= EQUIPO =================
     with sub1:
@@ -530,11 +533,20 @@ with tabs[5]:
 
         puesto = st.selectbox(
             "Puesto",
-            ["Gerente", "Subgerente", "Jefe", "Coordinador", "Auxiliar"],
+            [
+                "Global",
+                "Gerente",
+                "Subgerente",
+                "Jefe",
+                "Coordinador",
+                "Auxiliar",
+            ],
             key="adm_puesto",
         )
 
         areas_equipo = obtener_areas_equipo()
+        if "Global" not in areas_equipo:
+            areas_equipo.insert(0, "Global")
 
         area = st.selectbox(
             "Área interna",
@@ -595,6 +607,101 @@ with tabs[5]:
         st.divider()
         st.dataframe(pd.DataFrame(obtener_catalogo()), width="stretch")
 
+    # ================= ACCESOS =================
+    with sub4:
+        # SOLO ADMINS
+        if st.session_state.rol != "Admin":
+            st.warning("Solo administradores")
+            st.stop()
+
+        st.subheader("🔐 Gestión de accesos")
+
+        st.markdown("### Crear nuevo acceso")
+
+        nombre_user = st.text_input("Nombre completo", key="acc_nom")
+
+        username = st.text_input("Usuario", key="acc_user")
+
+        password = st.text_input(
+            "Contraseña",
+            type="password",
+            key="acc_pass",
+        )
+
+        rol = st.selectbox(
+            "Rol",
+            [
+                "Admin",
+                "Gerente",
+                "Subgerente",
+                "Jefe",
+                "Coordinador",
+                "Auxiliar",
+            ],
+            key="acc_rol",
+        )
+        # AREA GLOBAL PARA ADMINS
+        if rol == "Admin":
+            area = "Global"
+            puesto = "Global"
+
+            st.info("Los administradores usan área y puesto Global")
+
+        else:
+            puesto = st.selectbox(
+                "Puesto",
+                [
+                    "Gerente",
+                    "Subgerente",
+                    "Jefe",
+                    "Coordinador",
+                    "Auxiliar",
+                ],
+                key="acc_puesto",
+            )
+
+            areas_equipo = obtener_areas_equipo()
+
+            area = st.selectbox(
+                "Área",
+                areas_equipo,
+                key="acc_area",
+            )
+
+        if st.button("Crear acceso", key="btn_access"):
+            try:
+                # CREAR ACCESO
+                crear_usuario(
+                    username,
+                    password,
+                    nombre_user,
+                    rol,
+                )
+                # CREAR EN EQUIPO
+                insertar_miembro(
+                    nombre_user,
+                    puesto,
+                    area,
+                    None,
+                )
+
+                st.success("Acceso creado")
+                st.rerun()
+
+            except Exception as e:
+                st.error(f"Error: {e}")
+
+    st.divider()
+
+    st.subheader("Usuarios registrados")
+
+    usuarios = obtener_usuarios()
+
+    if usuarios:
+        df_users = pd.DataFrame(usuarios)
+        st.dataframe(df_users, width="stretch")
+    else:
+        st.info("Sin usuarios registrados")
 # ------------------ HISTORIAL ------------------
 
 with tabs[6]:
