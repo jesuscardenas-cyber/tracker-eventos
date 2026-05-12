@@ -160,7 +160,7 @@ tabs = st.tabs(
         "📊 Carga",
         "💰 Gastos",
         "⚙️ Administración",
-        "📜 Historial📈 Histórico Ejecutivo",
+        "📜 Historial,📈 Histórico Ejecutivo",
     ]
 )
 
