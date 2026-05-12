@@ -180,6 +180,10 @@ def init_db():
         c.execute("ALTER TABLE equipo ADD COLUMN username TEXT")
     except Exception:
         pass
+    try:
+        c.execute("ALTER TABLE eventos ADD COLUMN fecha_inicio TEXT")
+    except Exception:
+        pass
     conn.commit()
     conn.close()
 
@@ -275,16 +279,23 @@ def obtener_areas():
 # ------------------ EVENTOS ------------------
 
 
-def insertar_evento(id_ev, evento, responsable, estado, area_solicitante):
+def insertar_evento(
+    id_ev,
+    evento,
+    responsable,
+    estado,
+    area_solicitante,
+    fecha_inicio,
+):
     conn = sqlite3.connect(DB)
     c = conn.cursor()
 
     c.execute(
         """
-    INSERT INTO eventos (id_ev, evento, responsable, estado, area_solicitante)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO eventos (id_ev, evento, responsable, estado, area_solicitante, fecha_inicio)
+    VALUES (?, ?, ?, ?, ?, ?)
     """,
-        (id_ev, evento, responsable, estado, area_solicitante),
+        (id_ev, evento, responsable, estado, area_solicitante, fecha_inicio),
     )
 
     conn.commit()
@@ -300,7 +311,13 @@ def obtener_eventos():
 
     return {
         "registros": [
-            {"id_ev": r[0], "evento": r[1], "responsable": r[2], "estado_evento": r[3]}
+            {
+                "id_ev": r[0],
+                "evento": r[1],
+                "responsable": r[2],
+                "estado_evento": r[3],
+                "fecha_inicio": r[4],
+            }
             for r in rows
         ]
     }
@@ -785,3 +802,40 @@ def obtener_miembro_por_username(username):
         }
 
     return None
+
+
+def obtener_historial_eventos_live():
+
+    eventos = obtener_eventos()["registros"]
+
+    data = []
+
+    for ev in eventos:
+        tareas = obtener_tareas_por_evento(ev["id_ev"])
+        gastos = obtener_gastos_por_evento(ev["id_ev"])
+
+        # FECHA INICIO
+        fecha_inicio = ev.get("fecha_inicio")
+
+        # FECHA FIN
+        fechas_fin = [t["fecha_limite"] for t in tareas if t.get("fecha_limite")]
+
+        fecha_fin = max(fechas_fin) if fechas_fin else None
+
+        # HORAS
+        horas_totales = sum(t["hrs"] for t in tareas)
+
+        # COSTO
+        costo_total = sum(g["importe"] for g in gastos)
+
+        data.append(
+            {
+                "Evento": ev["evento"],
+                "Fecha Inicio": fecha_inicio,
+                "Fecha Fin": fecha_fin,
+                "Horas Totales": horas_totales,
+                "Costo Total": costo_total,
+            }
+        )
+
+    return data

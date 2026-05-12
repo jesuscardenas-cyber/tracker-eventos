@@ -21,6 +21,7 @@ from database import (
     crear_usuario,
     obtener_usuarios,
     obtener_miembro_por_username,
+    obtener_historial_eventos_live,
 )
 import streamlit as st
 import pandas as pd
@@ -159,7 +160,7 @@ tabs = st.tabs(
         "📊 Carga",
         "💰 Gastos",
         "⚙️ Administración",
-        "📜 Historial",
+        "📜 Historial📈 Histórico Ejecutivo",
     ]
 )
 
@@ -284,7 +285,14 @@ with tabs[1]:
         )
 
         if st.form_submit_button("Crear"):
-            insertar_evento(str(uuid.uuid4())[:8], ev, resp, "En proceso", area)
+            insertar_evento(
+                str(uuid.uuid4())[:8],
+                ev,
+                resp,
+                "En proceso",
+                area,
+                str(date.today()),
+            )
             st.success("Evento creado")
             st.rerun()
 
@@ -877,3 +885,21 @@ with tabs[6]:
 
         else:
             st.info("Sin historial")
+
+# ================== HISTÓRICO EJECUTIVO ==================
+with tabs[7]:
+    st.header("📈 Histórico Ejecutivo")
+
+    data = obtener_historial_eventos_live()
+
+    if data:
+        df = pd.DataFrame(data)
+
+        st.dataframe(df, width="stretch")
+
+        st.metric("Horas Totales", int(df["Horas Totales"].sum()))
+
+        st.metric("Costo Total", f"${df['Costo Total'].sum():,.0f}")
+
+    else:
+        st.info("Sin información")
