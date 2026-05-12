@@ -176,6 +176,10 @@ def init_db():
         c.execute("ALTER TABLE tareas ADD COLUMN asignado_por TEXT")
     except Exception:
         pass
+    try:
+        c.execute("ALTER TABLE equipo ADD COLUMN username TEXT")
+    except Exception:
+        pass
     conn.commit()
     conn.close()
 
@@ -448,7 +452,7 @@ def generar_nivel(area, puesto):
     return f"{pref}{nivel}"
 
 
-def insertar_miembro(nombre, puesto, area, jefe_id=None):
+def insertar_miembro(nombre, puesto, area, username, jefe_id=None):
     conn = get_conn()
     c = conn.cursor()
 
@@ -456,10 +460,10 @@ def insertar_miembro(nombre, puesto, area, jefe_id=None):
 
     c.execute(
         """
-    INSERT INTO equipo (nombre, puesto, area, nivel, jefe_id)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO equipo (nombre, puesto, area, nivel, jefe_id, username)
+    VALUES (?, ?, ?, ?, ?, ?)
     """,
-        (nombre, puesto, area, nivel, jefe_id),
+        (nombre, puesto, area, nivel, jefe_id, username),
     )
 
     conn.commit()
@@ -752,3 +756,32 @@ def obtener_subordinados(nombre):
     conn.close()
 
     return [r[0] for r in data]
+
+
+def obtener_miembro_por_username(username):
+    conn = get_conn()
+    c = conn.cursor()
+
+    c.execute(
+        """
+        SELECT id, nombre, puesto, area, jefe_id
+        FROM equipo
+        WHERE username = ?
+        """,
+        (username,),
+    )
+
+    row = c.fetchone()
+
+    conn.close()
+
+    if row:
+        return {
+            "id": row[0],
+            "nombre": row[1],
+            "puesto": row[2],
+            "area": row[3],
+            "jefe_id": row[4],
+        }
+
+    return None

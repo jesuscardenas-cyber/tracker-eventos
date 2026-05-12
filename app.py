@@ -20,6 +20,7 @@ from database import (
     login,
     crear_usuario,
     obtener_usuarios,
+    obtener_miembro_por_username,
 )
 import streamlit as st
 import pandas as pd
@@ -60,13 +61,13 @@ if not st.session_state.auth:
 
 if st.session_state.rol == "Admin":
     usuario = {
-        "nombre": st.session_state.nombre,
+        "nombre": "ADMIN",
         "puesto": "Admin",
         "area": "Global",
     }
 
 else:
-    usuario = obtener_usuario(st.session_state.nombre)
+    usuario = obtener_miembro_por_username(st.session_state.user)
 
 # ================= CONFIG =================
 
@@ -142,7 +143,7 @@ if st.session_state.rol == "Admin":
         "area": "Global",
     }
 else:
-    usuario = obtener_usuario(st.session_state.user)
+    usuario = obtener_miembro_por_username(st.session_state.user)
 
 for ev in eventos_data["registros"]:
     ev["tareas"] = obtener_tareas_por_evento(ev["id_ev"])
@@ -746,7 +747,7 @@ with tabs[6]:
             rango = f1.date_input(
                 "Filtrar fechas",
                 [fecha_min, fecha_max] if fecha_min and fecha_max else None,
-                key="hist_f_tareas",  # 🔥 KEY ÚNICO
+                key="hist_f_tareas",
             )
 
             responsables = f2.multiselect(
@@ -757,7 +758,7 @@ with tabs[6]:
                 default=df["Responsable"].dropna().unique()
                 if "Responsable" in df.columns
                 else [],
-                key="hist_r_tareas",  # 🔥 KEY ÚNICO
+                key="hist_r_tareas",
             )
 
             mask = pd.Series([True] * len(df))
