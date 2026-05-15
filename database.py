@@ -511,7 +511,7 @@ def obtener_equipo_detalle():
 def obtener_nombres_equipo():
     conn = get_conn()
     c = conn.cursor()
-    c.execute("SELECT nombre FROM equipo")
+    c.execute("SELECT nombre FROM equipo WHERE puesto NOT IN ('Admin', 'Global')")
     rows = c.fetchall()
     conn.close()
 

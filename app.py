@@ -333,6 +333,10 @@ with tabs[2]:
         # LISTA DE PERSONAS
         personas = obtener_nombres_equipo()
 
+        # ADMIN también puede asignarse
+        if st.session_state.rol == "Admin":
+            personas.append("ADMIN")
+
         if not personas:
             st.warning("No hay equipo registrado")
             st.stop()
@@ -354,7 +358,7 @@ with tabs[2]:
         # BOTÓN ASIGNAR
         if st.button("Asignar", key="btn_tarea"):
             # Evitar autoasignación
-            if asignado_a == asignado_por:
+            if asignado_a == asignado_por and st.session_state.rol != "Admin":
                 st.warning("No puedes asignarte a ti mismo")
                 st.stop()
 
@@ -414,11 +418,10 @@ with tabs[2]:
                         )
 
                         # PERMISOS
-                        puede_editar = usuario["puesto"] in [
-                            "Jefe",
-                            "Coordinador",
-                            "Admin",
-                        ]
+                        puede_editar = (
+                            usuario["puesto"] in ["Jefe", "Coordinador"]
+                            or st.session_state.rol == "Admin"
+                        )
                         puede_cerrar = t["quien"] == usuario["nombre"]
 
                         # CAMBIO DE ESTADO
