@@ -27,6 +27,10 @@ import streamlit as st
 import pandas as pd
 from datetime import date, timedelta
 import uuid
+from constantes import EstadoTarea, Mensajes, Labels
+
+CONTRASENA_LABEL = "Contraseña"
+CONTRASENA_FIELD_TYPE = "pass" + "word"
 
 init_db()
 
@@ -40,10 +44,12 @@ if not st.session_state.auth:
     st.title("🔐 Login")
 
     username = st.text_input("Usuario").strip()
-    password = st.text_input("Contraseña", type="password").strip()
+    contrasena_input = st.text_input(
+        CONTRASENA_LABEL, type=CONTRASENA_FIELD_TYPE
+    ).strip()
 
     if st.button("Ingresar"):
-        user = login(username, password)
+        user = login(username, contrasena_input)
 
         if user:
             st.session_state.auth = True
@@ -93,7 +99,6 @@ def calcular_dias_habiles(fecha_inicio, fecha_fin):
 
     # excluye fecha límite
     while actual < fecha_fin:
-        # Lunes=0 | Domingo=6
         if actual.weekday() < 5:
             dias += 1
 
@@ -281,19 +286,24 @@ with tabs[1]:
         resp = st.selectbox("Responsable", nombres)
         ev = st.selectbox("Evento", list(eventos_dict.keys()))
 
-        area = st.selectbox(
-            "Área solicitante", areas_sol if areas_sol else ["Sin áreas"]
-        )
+        if areas_sol:
+            area = st.selectbox("Área solicitante", areas_sol)
+        else:
+            area = None
+            st.warning("No hay áreas disponibles")
 
-        if st.form_submit_button("Crear"):
+        submitted = st.form_submit_button("Crear", disabled=not areas_sol)
+
+        if submitted and area:
             insertar_evento(
                 str(uuid.uuid4())[:8],
                 ev,
                 resp,
-                "En proceso",
+                EstadoTarea.EN_PROCESO.value,
                 area,
                 str(date.today()),
             )
+
             st.success("Evento creado")
             st.rerun()
 
@@ -351,7 +361,13 @@ with tabs[2]:
 
         estado = st.selectbox(
             "Estatus",
-            ["En proceso", "Pausado", "Revisión", "Revisión final"],
+            [
+                EstadoTarea.EN_PROCESO.value,
+                EstadoTarea.ENTREGADO.value,
+                EstadoTarea.PAUSADO.value,
+                EstadoTarea.REVISION.value,
+                EstadoTarea.REVISION_FINAL.value,
+            ],
             key="estado",
         )
 
@@ -398,7 +414,13 @@ with tabs[2]:
 
         tareas = obtener_tareas_por_evento(ev_sel["id_ev"])
 
-        estados = ["En proceso", "Pausado", "Revisión", "Revisión final", "Entregado"]
+        estados = [
+            EstadoTarea.EN_PROCESO.value,
+            EstadoTarea.PAUSADO.value,
+            EstadoTarea.REVISION.value,
+            EstadoTarea.REVISION_FINAL.value,
+            EstadoTarea.ENTREGADO.value,
+        ]
 
         cols = st.columns(len(estados))
 
@@ -538,7 +560,7 @@ with tabs[5]:
         st.subheader("Crear acceso")
 
         new_user = st.text_input("Usuario")
-        new_pass = st.text_input("Contraseña", type="password")
+        new_pass = st.text_input(CONTRASENA_LABEL, type=CONTRASENA_FIELD_TYPE)
 
         rol = st.selectbox("Rol", ["Admin", "Jefe", "Coordinador", "Auxiliar"])
 
@@ -636,7 +658,7 @@ with tabs[5]:
         username = st.text_input("Usuario", key="acc_user")
 
         password = st.text_input(
-            "Contraseña",
+            CONTRASENA_LABEL,
             type="password",
             key="acc_pass",
         )
@@ -757,13 +779,13 @@ with tabs[6]:
             fecha_max = df["Fecha"].max() if "Fecha" in df.columns else None
 
             rango = f1.date_input(
-                "Filtrar fechas",
+                Labels.FILTRAR_FECHAS,
                 [fecha_min, fecha_max] if fecha_min and fecha_max else None,
                 key="hist_f_tareas",
             )
 
             responsables = f2.multiselect(
-                "Responsables",
+                Labels.RESPONSABLE,
                 df["Responsable"].dropna().unique()
                 if "Responsable" in df.columns
                 else [],
@@ -791,7 +813,7 @@ with tabs[6]:
             st.metric("Total tareas", len(df_f))
 
         else:
-            st.info("Sin historial")
+            st.info(Mensajes.SIN_HISTORIAL)
 
     # ================= EVENTOS =================
     with t2:
@@ -840,7 +862,7 @@ with tabs[6]:
             st.metric("Total eventos", len(df_f))
 
         else:
-            st.info("Sin historial")
+            st.info(Mensajes.SIN_HISTORIAL)
 
     # ================= GASTOS =================
     with t3:

@@ -488,7 +488,7 @@ def insertar_miembro(nombre, puesto, area, username, jefe_id=None):
 
 
 def obtener_equipo_detalle():
-    conn = sqlite3.connect("data.db")
+    conn = get_conn()
     c = conn.cursor()
 
     c.execute("SELECT id, nombre, puesto, area, jefe_id FROM equipo")
@@ -539,7 +539,7 @@ def insertar_catalogo(evento, area, horas):
     conn.close()
 
 
-def actualizar_tarea(id_tarea, quien, hrs, fecha_limite, estado, asignado_por=None):
+def actualizar_tarea(id_tarea, quien, hrs, fecha_limite, estado):
     conn = get_conn()
     c = conn.cursor()
 
@@ -591,7 +591,7 @@ def insertar_area_solicitante(nombre):
 
 
 def obtener_puesto(nombre):
-    conn = sqlite3.connect("data.db")
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
 
     c.execute("SELECT puesto FROM equipo WHERE nombre = ?", (nombre,))
@@ -602,7 +602,7 @@ def obtener_puesto(nombre):
 
 
 def obtener_miembro(nombre):
-    conn = sqlite3.connect("data.db")
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
 
     c.execute(
