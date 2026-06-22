@@ -544,60 +544,18 @@ with tabs[5]:
 
     # ================= EQUIPO =================
     with sub1:
-        equipo = obtener_equipo_detalle()
+        if st.session_state.rol != "Admin":
+            st.warning("Solo administradores")
+            st.stop()
 
-        opciones_jefe = ["Sin jefe"] + [m["nombre"] for m in equipo]
+    st.subheader("👥 Equipo actual")
 
-        jefe_nombre = st.selectbox("Jefe directo", opciones_jefe)
+    equipo = obtener_equipo_detalle()
 
-        # Convertir a ID
-        if jefe_nombre == "Sin jefe":
-            jefe_id = None
-        else:
-            jefe_id = next(m["id"] for m in equipo if m["nombre"] == jefe_nombre)
-
-        st.subheader("Agregar miembro")
-        st.subheader("Crear acceso")
-
-        new_user = st.text_input("Usuario")
-        new_pass = st.text_input(CONTRASENA_LABEL, type=CONTRASENA_FIELD_TYPE)
-
-        rol = st.selectbox("Rol", ["Admin", "Jefe", "Coordinador", "Auxiliar"])
-
-        nombre = st.text_input("Nombre", key="adm_nom")
-
-        puesto = st.selectbox(
-            "Puesto",
-            [
-                "Global",
-                "Gerente",
-                "Subgerente",
-                "Jefe",
-                "Coordinador",
-                "Auxiliar",
-            ],
-            key="adm_puesto",
-        )
-
-        areas_equipo = obtener_areas_equipo()
-        if "Global" not in areas_equipo:
-            areas_equipo.insert(0, "Global")
-
-        area = st.selectbox(
-            "Área interna",
-            areas_equipo if areas_equipo else ["Sin áreas"],
-            key="adm_area",
-        )
-
-        if st.button("Agregar miembro", key="btn_add_user"):
-            insertar_miembro(nombre, puesto, area, jefe_id)
-            crear_usuario(new_user, new_pass, nombre, puesto)
-            st.success("Miembro agregado")
-            st.rerun()
-
-        st.divider()
-        st.subheader("Equipo actual")
-        st.dataframe(pd.DataFrame(obtener_equipo_detalle()), width="stretch")
+    if equipo:
+        st.dataframe(pd.DataFrame(equipo), width="stretch")
+    else:
+        st.info("Sin miembros registrados")
 
     # ================= AREAS SOLICITANTES =================
     with sub2:
@@ -644,21 +602,24 @@ with tabs[5]:
 
     # ================= ACCESOS =================
     with sub4:
-        # SOLO ADMINS
         if st.session_state.rol != "Admin":
             st.warning("Solo administradores")
             st.stop()
 
-        st.subheader("🔐 Gestión de accesos")
+        st.subheader("🔐 Crear acceso")
 
-        st.markdown("### Crear nuevo acceso")
+        nombre_user = st.text_input(
+            "Nombre completo",
+            key="acc_nom",
+        )
 
-        nombre_user = st.text_input("Nombre completo", key="acc_nom")
-
-        username = st.text_input("Usuario", key="acc_user")
+        username = st.text_input(
+            "Usuario",
+            key="acc_user",
+        )
 
         password = st.text_input(
-            CONTRASENA_LABEL,
+            "Contraseña",
             type="password",
             key="acc_pass",
         )
@@ -675,25 +636,20 @@ with tabs[5]:
             ],
             key="acc_rol",
         )
-        # AREA GLOBAL PARA ADMINS
-        if rol == "Admin":
-            area = "Global"
-            puesto = "Global"
 
-            st.info("Los administradores usan área y puesto Global")
+        # ================= ADMIN =================
+
+        if rol == "Admin":
+            puesto = "Global"
+            area = "Global"
+            jefe_id = None
+
+            st.info("Los administradores no forman parte del equipo operativo")
+
+        # ================= OPERATIVOS =================
 
         else:
-            puesto = st.selectbox(
-                "Puesto",
-                [
-                    "Gerente",
-                    "Subgerente",
-                    "Jefe",
-                    "Coordinador",
-                    "Auxiliar",
-                ],
-                key="acc_puesto",
-            )
+            puesto = rol
 
             areas_equipo = obtener_areas_equipo()
 
@@ -703,40 +659,83 @@ with tabs[5]:
                 key="acc_area",
             )
 
+            equipo = obtener_equipo_detalle()
+
+            opciones_jefe = []
+
+            if puesto == "Gerente":
+                opciones_jefe = []
+
+            elif puesto == "Subgerente":
+                opciones_jefe = [
+                    m["nombre"] for m in equipo if m["puesto"] == "Gerente"
+                ]
+
+            elif puesto == "Jefe":
+                opciones_jefe = [
+                    m["nombre"] for m in equipo if m["puesto"] == "Subgerente"
+                ]
+
+            elif puesto == "Coordinador":
+                opciones_jefe = [m["nombre"] for m in equipo if m["puesto"] == "Jefe"]
+
+            elif puesto == "Auxiliar":
+                opciones_jefe = [
+                    m["nombre"] for m in equipo if m["puesto"] == "Coordinador"
+                ]
+
+            if opciones_jefe:
+                jefe_nombre = st.selectbox(
+                    "Jefe directo",
+                    opciones_jefe,
+                )
+
+                jefe_id = next(m["id"] for m in equipo if m["nombre"] == jefe_nombre)
+
+            else:
+                jefe_id = None
+
+                st.info("Este puesto no requiere jefe directo")
+
+        # ================= GUARDAR =================
+
         if st.button("Crear acceso", key="btn_access"):
             try:
-                # CREAR ACCESO
                 crear_usuario(
                     username,
                     password,
                     nombre_user,
                     rol,
                 )
-                # CREAR EN EQUIPO
-                insertar_miembro(
-                    nombre_user,
-                    puesto,
-                    area,
-                    None,
-                )
 
-                st.success("Acceso creado")
+                # SOLO SI NO ES ADMIN
+                if rol != "Admin":
+                    insertar_miembro(
+                        nombre_user,
+                        puesto,
+                        area,
+                        jefe_id,
+                    )
+
+                st.success("Acceso creado correctamente")
                 st.rerun()
 
             except Exception as e:
                 st.error(f"Error: {e}")
 
-    st.divider()
+        st.divider()
 
-    st.subheader("Usuarios registrados")
+        st.subheader("Usuarios registrados")
 
-    usuarios = obtener_usuarios()
+        usuarios = obtener_usuarios()
 
-    if usuarios:
-        df_users = pd.DataFrame(usuarios)
-        st.dataframe(df_users, width="stretch")
-    else:
-        st.info("Sin usuarios registrados")
+        if usuarios:
+            st.dataframe(
+                pd.DataFrame(usuarios),
+                width="stretch",
+            )
+        else:
+            st.info("Sin usuarios registrados")
 # ------------------ HISTORIAL ------------------
 
 with tabs[6]:
