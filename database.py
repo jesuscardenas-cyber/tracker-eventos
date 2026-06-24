@@ -469,7 +469,7 @@ def generar_nivel(area, puesto):
     return f"{pref}{nivel}"
 
 
-def insertar_miembro(nombre, puesto, area, username, jefe_id=None):
+def insertar_miembro(nombre, puesto, area, jefe_id=None):
     conn = get_conn()
     c = conn.cursor()
 
@@ -477,10 +477,17 @@ def insertar_miembro(nombre, puesto, area, username, jefe_id=None):
 
     c.execute(
         """
-    INSERT INTO equipo (nombre, puesto, area, nivel, jefe_id, username)
-    VALUES (?, ?, ?, ?, ?, ?)
-    """,
-        (nombre, puesto, area, nivel, jefe_id, username),
+        INSERT INTO equipo
+        (nombre, puesto, area, nivel, jefe_id)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (
+            nombre,
+            puesto,
+            area,
+            nivel,
+            jefe_id,
+        ),
     )
 
     conn.commit()
