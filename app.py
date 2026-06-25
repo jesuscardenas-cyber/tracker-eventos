@@ -709,7 +709,14 @@ with tabs[5]:
                 )
 
                 # SOLO SI NO ES ADMIN
+                st.write(
+                    "Jefe seleccionado:",
+                    jefe_nombre if "jefe_nombre" in locals() else "N/A",
+                )
+                st.write("ID jefe:", jefe_id)
                 if rol != "Admin":
+                    st.write("DEBUG INSERT:", nombre_user, puesto, area, jefe_id)
+
                     insertar_miembro(
                         nombre_user,
                         puesto,
