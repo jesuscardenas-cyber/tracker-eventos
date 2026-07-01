@@ -651,13 +651,16 @@ with tabs[5]:
         else:
             puesto = rol
 
-            areas_equipo = obtener_areas_equipo()
+            if puesto in ["Gerente", "Subgerente"]:
+                area = "Global"
+            else:
+                areas_equipo = obtener_areas_equipo()
 
-            area = st.selectbox(
-                "Área",
-                areas_equipo,
-                key="acc_area",
-            )
+                area = st.selectbox(
+                    "Área",
+                    areas_equipo,
+                    key="acc_area",
+                )
 
             equipo = obtener_equipo_detalle()
 
@@ -677,11 +680,17 @@ with tabs[5]:
                 ]
 
             elif puesto == "Coordinador":
-                opciones_jefe = [m["nombre"] for m in equipo if m["puesto"] == "Jefe"]
+                opciones_jefe = [
+                    m["nombre"]
+                    for m in equipo
+                    if m["puesto"] == "Jefe" and m["area"] == area
+                ]
 
             elif puesto == "Auxiliar":
                 opciones_jefe = [
-                    m["nombre"] for m in equipo if m["puesto"] == "Coordinador"
+                    m["nombre"]
+                    for m in equipo
+                    if m["puesto"] == "Coordinador" and m["area"] == area
                 ]
 
             if opciones_jefe:
