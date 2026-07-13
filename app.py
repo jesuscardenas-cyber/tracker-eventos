@@ -35,9 +35,17 @@ CONTRASENA_FIELD_TYPE = "pass" + "word"
 init_db()
 
 # ================= AUTH =================
-
 if "auth" not in st.session_state:
     st.session_state.auth = False
+
+if "user" not in st.session_state:
+    st.session_state.user = None
+
+if "nombre" not in st.session_state:
+    st.session_state.nombre = ""
+
+if "rol" not in st.session_state:
+    st.session_state.rol = ""
 
 # LOGIN
 if not st.session_state.auth:

@@ -788,15 +788,21 @@ def obtener_miembro_por_username(username):
 
     c.execute(
         """
-        SELECT id, nombre, puesto, area, jefe_id
-        FROM equipo
-        WHERE username = ?
+        SELECT
+            e.id,
+            e.nombre,
+            e.puesto,
+            e.area,
+            e.jefe_id
+        FROM equipo e
+        INNER JOIN usuarios u
+            ON e.nombre = u.nombre
+        WHERE u.username = ?
         """,
         (username,),
     )
 
     row = c.fetchone()
-
     conn.close()
 
     if row:
