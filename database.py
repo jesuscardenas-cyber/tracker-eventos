@@ -1,9 +1,9 @@
 import logging
 import os
 
-import psycopg2
+import psycopg
 import streamlit as st
-from psycopg2.extras import RealDictCursor
+from psycopg.rows import dict_row
 
 logger = logging.getLogger(__name__)
 
@@ -32,14 +32,14 @@ def get_db_config():
 def get_connection():
     config = get_db_config()
 
-    # Se pasan los parámetros explícitos y client_encoding en UTF-8
-    return psycopg2.connect(
+    # psycopg3 usa row_factory=dict_row para reemplazar RealDictCursor
+    return psycopg.connect(
         host=config["host"],
         port=config["port"],
         dbname=config["dbname"],
         user=config["user"],
         password=config["password"],
-        cursor_factory=RealDictCursor,
+        row_factory=dict_row,
         client_encoding="utf8",
     )
 
